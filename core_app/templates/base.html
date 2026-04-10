@@ -1,0 +1,111 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Доска объявлений{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4 sticky-top" id="mainNav">
+    <div class="container">
+        <a class="navbar-brand text-danger fw-bold fs-4" href="{% url 'ad_list' %}">
+            <i class="bi bi-megaphone-fill me-1"></i>KaspiBoard
+        </a>
+        <button class="navbar-toggler border-0" type="button"
+                data-bs-toggle="offcanvas" data-bs-target="#mobileMenu" aria-controls="mobileMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navBar">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center gap-1">
+                <li class="nav-item dropdown categories-dropdown d-none d-lg-block">
+                    <button class="btn btn-outline-danger btn-sm rounded-pill px-3 dropdown-toggle"
+                            type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-grid me-1"></i>Категории
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item {% if not request.resolver_match.kwargs.slug %}active-cat{% endif %}"
+                               href="{% url 'ad_list' %}">
+                                <i class="bi bi-grid me-2"></i>Все категории
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider my-1"></li>
+                        {% for cat in categories %}
+                        <li>
+                            <a class="dropdown-item {% if request.resolver_match.kwargs.slug == cat.slug %}active-cat{% endif %}"
+                               href="{% url 'category_list' cat.slug %}">
+                                {{ cat.name }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+                {% if user.is_authenticated %}
+                    <li class="nav-item"><a class="nav-link fw-medium" href="{% url 'profile' %}"><i class="bi bi-person-circle me-1"></i>{{ user.username }}</a></li>
+                    <li class="nav-item"><a class="btn btn-outline-secondary btn-sm px-3" href="{% url 'logout' %}">Выйти</a></li>
+                    <li class="nav-item"><a class="btn btn-danger rounded-pill px-4" href="{% url 'ad_create' %}"><i class="bi bi-plus-lg me-1"></i>Подать объявление</a></li>
+                {% else %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Войти</a></li>
+                    <li class="nav-item"><a class="btn btn-danger rounded-pill px-4" href="{% url 'register' %}">Регистрация</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title text-danger fw-bold" id="mobileMenuLabel">
+            <i class="bi bi-megaphone-fill me-1"></i>KaspiBoard
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body d-flex flex-column gap-1">
+        <ul class="navbar-nav gap-1">
+            {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link fw-medium" href="{% url 'profile' %}">
+                        <i class="bi bi-person-circle me-2"></i>{{ user.username }}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="btn btn-outline-secondary btn-sm" href="{% url 'logout' %}">Выйти</a>
+                </li>
+                <li class="nav-item mt-2">
+                    <a class="btn btn-danger rounded-pill" href="{% url 'ad_create' %}">
+                        <i class="bi bi-plus-lg me-1"></i>Подать объявление
+                    </a>
+                </li>
+            {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'login' %}">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Войти
+                    </a>
+                </li>
+                <li class="nav-item mt-2">
+                    <a class="btn btn-danger rounded-pill" href="{% url 'register' %}">Регистрация</a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+
+<div class="container pb-5">
+    {% if messages %}
+        {% for m in messages %}
+            <div class="alert alert-{{ m.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+                {{ m }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+</div>
+<footer class="site-footer"><div class="container text-center">© 2025 KaspiBoard — Доска объявлений</div></footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

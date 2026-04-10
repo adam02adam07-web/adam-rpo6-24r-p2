@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-sm-9 col-md-6 col-lg-5">
+            <div class="card border-0 shadow rounded-4 fade-in-up">
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-person-plus display-4 text-danger"></i>
+                        <h3 class="fw-bold mt-2">Регистрация</h3>
+                    </div>
+                    <form method="post">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="mb-3 fade-in-up delay-{{ forloop.counter }}">
+                                <label class="form-label fw-medium">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.help_text %}<div class="form-text text-muted small">{{ field.help_text }}</div>{% endif %}
+                                {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                            </div>
+                        {% endfor %}
+                        <button type="submit" class="btn btn-success w-100 py-2 mt-2 rounded-pill fw-semibold">Зарегистрироваться</button>
+                    </form>
+                    <p class="text-center mt-3 small text-muted">
+                        Уже есть аккаунт? <a href="{% url 'login' %}" class="text-decoration-none text-danger fw-medium">Войти</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    input,select,textarea{display:block;width:100%;padding:.5rem .75rem;font-size:1rem;border:1px solid #dee2e6;border-radius:.5rem;transition:border-color .15s,box-shadow .15s;}
+    input:focus,select:focus,textarea:focus{border-color:#dc3545;outline:0;box-shadow:0 0 0 .2rem rgba(220,53,69,.15);}
+</style>
+{% endblock %}

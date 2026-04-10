@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% block title %}{{ ad.title }}{% endblock %}
+
+{% block content %}
+<div class="row g-4 fade-in">
+    <!-- Left: ad details -->
+    <div class="col-12 col-md-8">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 fade-in-up">
+            {% if ad.image %}
+                <div class="overflow-hidden" style="max-height:480px">
+                    <img src="{{ ad.image.url }}" class="w-100" style="object-fit:cover;transition:transform .4s ease" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                </div>
+            {% endif %}
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex justify-content-between mb-3 text-muted small">
+                    <span><i class="bi bi-tag me-1"></i>{{ ad.category.name }} • <i class="bi bi-geo-alt me-1"></i>{{ ad.city.name }}</span>
+                    <span><i class="bi bi-clock me-1"></i>{{ ad.created_at|date:"d E Y, H:i" }}</span>
+                </div>
+                <h1 class="fw-bold mb-4">{{ ad.title }}</h1>
+                <h5 class="fw-semibold mb-3">Описание</h5>
+                <p class="fs-6 text-secondary lh-lg" style="white-space:pre-line;">{{ ad.description }}</p>
+            </div>
+        </div>
+
+        <!-- Reviews section -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 fade-in-up delay-2">
+            <h5 class="fw-bold mb-3"><i class="bi bi-chat-quote me-2 text-danger"></i>Отзывы ({{ reviews|length }})</h5>
+
+            {% if reviews %}
+                <div class="mb-4">
+                    {% for r in reviews %}
+                    <div class="review-card card border-0 bg-light rounded-3 p-3 mb-3 fade-in-up delay-{{ forloop.counter }}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="d-flex align-items-center mb-1">
+                                <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-2 fw-bold" style="width:36px;height:36px;font-size:.85rem;flex-shrink:0">
+                                    {{ r.author.first_name|first|default:r.author.username|first|upper }}
+                                </div>
+                                <div>
+                                    <span class="fw-semibold">{{ r.author.first_name|default:r.author.username }}</span>
+                                    <div class="stars" style="font-size:.9rem">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= r.rating %}⭐{% else %}☆{% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            <small class="text-muted">{{ r.created_at|date:"d M Y" }}</small>
+                        </div>
+                        <p class="mb-0 mt-2 text-secondary">{{ r.text }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted mb-4">Отзывов пока нет. Будьте первым!</p>
+            {% endif %}
+
+            <!-- Leave review form -->
+            {% if user.is_authenticated %}
+                {% if user != ad.author %}
+                <div class="border-top pt-4 mt-2">
+                    <h6 class="fw-semibold mb-3">Оставить отзыв</h6>
+                    <form method="post" action="{% url 'add_review' ad.uuid %}">
+                        {% csrf_token %}
+                        <!-- Star picker -->
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Оценка</label>
+                            <div id="starPicker">
+                                {% for i in "12345" %}
+                                <button type="button" class="star-btn" data-val="{{ forloop.counter }}" onclick="setRating({{ forloop.counter }})">★</button>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="rating" id="ratingInput" value="0" required>
+                            <small id="ratingError" class="text-danger d-none">Выберите оценку</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Комментарий</label>
+                            <textarea name="text" class="form-control" rows="3" placeholder="Ваш отзыв..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-danger rounded-pill px-4" onclick="return validateRating()">
+                            <i class="bi bi-send me-1"></i>Отправить отзыв
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                    <p class="text-muted small fst-italic">Нельзя оставить отзыв на своё объявление.</p>
+                {% endif %}
+            {% else %}
+                <div class="border-top pt-3 mt-2">
+                    <p class="text-muted mb-0"><a href="{% url 'login' %}" class="text-danger">Войдите</a>, чтобы оставить отзыв.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right: author card -->
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 sticky-top fade-in-up delay-1" style="top:80px">
+            <div class="card-body p-4">
+                <h2 class="text-danger fw-bold mb-4 text-center fs-1">
+                    {% if ad.price == 0 %}Бесплатно{% else %}{{ ad.price }} ₸{% endif %}
+                </h2>
+
+                <div class="d-flex align-items-center mb-4 p-3 bg-light rounded-3">
+                    <div class="bg-danger text-white rounded-circle d-flex justify-content-center align-items-center fw-bold fs-5" style="width:50px;height:50px;flex-shrink:0">
+                        {{ ad.author.first_name|first|default:"U" }}
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="mb-0 fw-bold">{{ ad.author.first_name }} {{ ad.author.last_name }}</h6>
+                        <small class="text-muted">На сайте с {{ ad.author.date_joined|date:"Y" }} года</small>
+                    </div>
+                </div>
+{% comment %} test {% endcomment %}
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary btn-lg rounded-pill" onclick="showPhone(this)" data-phone="{{ ad.phone|default:'Не указан' }}">
+                        <i class="bi bi-telephone me-2"></i>Показать телефон
+                    </button>
+                    <a href="{% url 'toggle_favorite' ad.uuid %}" class="btn {% if is_favorite %}btn-danger{% else %}btn-outline-danger{% endif %} btn-lg rounded-pill">
+                        <i class="bi bi-heart{% if is_favorite %}-fill{% endif %} me-2"></i>
+                        {% if is_favorite %}Убрать из избранного{% else %}В избранное{% endif %}
+                    </a>
+                </div>
+
+                {% if request.user == ad.author %}
+                <hr class="my-4">
+                <div class="d-flex gap-2">
+                    <a href="{% url 'ad_update' ad.uuid %}" class="btn btn-light w-50 rounded-pill"><i class="bi bi-pencil me-1"></i>Редактировать</a>
+                    <a href="{% url 'ad_delete' ad.uuid %}" class="btn btn-light text-danger w-50 rounded-pill"><i class="bi bi-trash me-1"></i>Удалить</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function setRating(val) {
+    document.getElementById('ratingInput').value = val;
+    document.querySelectorAll('.star-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', i < val);
+    });
+    document.getElementById('ratingError').classList.add('d-none');
+}
+function validateRating() {
+    if (parseInt(document.getElementById('ratingInput').value) < 1) {
+        document.getElementById('ratingError').classList.remove('d-none');
+        return false;
+    }
+    return true;
+}
+function showPhone(btn) {
+    const phone = btn.getAttribute('data-phone');
+    btn.innerHTML = '<i class="bi bi-telephone-fill me-2"></i>' + phone;
+    btn.classList.replace('btn-primary', 'btn-success');
+    btn.onclick = null;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% block title %}Все объявления{% endblock %}
+
+{% block content %}
+<style>
+    .ad-top { border: 2px solid #ffc107 !important; background-color: #fffdf0; }
+    .badge-vip { background: linear-gradient(45deg,#ffc107,#ff9800); color:#000; font-weight:bold; padding:5px 12px; border-radius:0 0 10px 0; position:absolute; top:0; left:0; z-index:10; box-shadow:2px 2px 5px rgba(0,0,0,.1); font-size:.75rem; }
+    .ad-img { height:180px; object-fit:cover; transition: transform 0.3s ease; }
+    .card-hover:hover .ad-img { transform: scale(1.04); }
+    .search-bar { transition: box-shadow 0.2s; }
+    .search-bar:focus-within { box-shadow: 0 0 0 3px rgba(220,53,69,0.15) !important; }
+
+    /* Кнопка категорий — только мобильный */
+    .category-mobile-btn { display: none; }
+    @media (max-width: 991px) {
+        .category-mobile-btn { display: flex; }
+    }
+
+    /* Offcanvas снизу */
+    .offcanvas-bottom.category-offcanvas {
+        height: auto;
+        max-height: 80vh;
+        border-radius: 20px 20px 0 0;
+    }
+    .category-offcanvas .offcanvas-body { padding: 0; overflow-y: auto; }
+    .category-offcanvas .list-group-item {
+        border-left: none;
+        border-right: none;
+        border-radius: 0 !important;
+        padding: 0.85rem 1.25rem;
+        font-size: 1rem;
+        transition: background 0.15s;
+    }
+    .category-offcanvas .list-group-item.active {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+    .category-offcanvas .list-group-item:first-child { border-top: none; }
+    .drawer-handle {
+        width: 40px; height: 4px;
+        background: #dee2e6; border-radius: 2px;
+        margin: 12px auto 8px;
+    }
+</style>
+
+<!-- Search bar -->
+<div class="card border-0 shadow-sm mb-4 rounded-4 fade-in-up">
+    <div class="card-body p-3">
+        <form method="get" class="row g-2">
+            <div class="col-12 col-md-7">
+                <div class="input-group search-bar rounded-3 overflow-hidden border-0 bg-light">
+                    <span class="input-group-text bg-light border-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="q" value="{{ request.GET.q }}" class="form-control bg-light border-0 py-2" placeholder="Я ищу ...">
+                </div>
+            </div>
+            <div class="col-8 col-md-3">
+                <select name="sort" class="form-select bg-light border-0 py-2">
+                    <option value="">Сначала новые</option>
+                    <option value="cheap" {% if request.GET.sort == 'cheap' %}selected{% endif %}>Сначала дешёвые</option>
+                    <option value="expensive" {% if request.GET.sort == 'expensive' %}selected{% endif %}>Сначала дорогие</option>
+                </select>
+            </div>
+            <div class="col-4 col-md-2 d-grid">
+                <button type="submit" class="btn btn-danger rounded-3"><i class="bi bi-search me-1"></i>Найти</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Кнопка категорий — только мобильный/планшет -->
+<div class="category-mobile-btn mb-3 fade-in-up">
+    <button class="btn btn-outline-danger rounded-pill w-100 py-2 fw-medium"
+            type="button" data-bs-toggle="offcanvas" data-bs-target="#categoryDrawer">
+        <i class="bi bi-grid me-2"></i>
+        {% if current_category %}
+            {% for cat in categories %}{% if current_category == cat.slug %}{{ cat.name }}{% endif %}{% endfor %}
+        {% else %}
+            Все категории
+        {% endif %}
+        <i class="bi bi-chevron-up ms-2"></i>
+    </button>
+</div>
+
+<!-- Ads grid — на всю ширину -->
+<div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
+    {% for ad in page_obj %}
+        <div class="col fade-in-up delay-{{ forloop.counter }}">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden position-relative card-hover {% if ad.is_top %}ad-top{% endif %}">
+                {% if ad.is_top %}
+                    <div class="badge-vip"><i class="bi bi-star-fill me-1"></i>ТОП</div>
+                {% endif %}
+                {% if ad.image %}
+                    <div class="overflow-hidden" style="height:180px">
+                        <img src="{{ ad.image.url }}" class="w-100 ad-img" alt="{{ ad.title }}">
+                    </div>
+                {% else %}
+                    <div class="bg-light d-flex justify-content-center align-items-center text-muted" style="height:180px">
+                        <i class="bi bi-image fs-1 opacity-25"></i>
+                    </div>
+                {% endif %}
+                <div class="card-body d-flex flex-column">
+                    <h6 class="card-title text-truncate mb-2">
+                        <a href="{% url 'ad_detail' ad.uuid %}" class="text-dark text-decoration-none stretched-link fw-semibold">{{ ad.title }}</a>
+                    </h6>
+                    <p class="price-tag mt-auto mb-1" style="color:#dc3545;font-weight:700">
+                        {% if ad.price == 0 %}Даром{% else %}{{ ad.price }} ₸{% endif %}
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <small class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ ad.city.name }}</small>
+                        <small class="text-muted">{{ ad.created_at|date:"d M" }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12 text-center py-5 fade-in">
+            <i class="bi bi-search display-4 text-muted opacity-25"></i>
+            <h5 class="text-muted mt-3">Ничего не найдено</h5>
+        </div>
+    {% endfor %}
+</div>
+
+{% if page_obj.has_other_pages %}
+<div class="d-flex justify-content-center mt-5 fade-in">
+    <div class="btn-group shadow-sm">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" class="btn btn-white border text-danger"><i class="bi bi-arrow-left"></i> Назад</a>
+        {% endif %}
+        <span class="btn btn-danger disabled">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" class="btn btn-white border text-danger">Вперёд <i class="bi bi-arrow-right"></i></a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Offcanvas категорий снизу — мобильный/планшет -->
+<div class="offcanvas offcanvas-bottom category-offcanvas" tabindex="-1" id="categoryDrawer">
+    <div class="offcanvas-header pb-0">
+        <div class="drawer-handle"></div>
+    </div>
+    <div class="offcanvas-header pt-0 border-bottom">
+        <h6 class="offcanvas-title fw-bold">
+            <i class="bi bi-grid me-2 text-danger"></i>Категории
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="list-group list-group-flush">
+            <a href="{% url 'ad_list' %}" class="list-group-item list-group-item-action {% if not current_category %}active{% endif %}">
+                <i class="bi bi-grid me-2"></i>Все категории
+            </a>
+            {% for cat in categories %}
+                <a href="{% url 'category_list' cat.slug %}" class="list-group-item list-group-item-action {% if current_category == cat.slug %}active{% endif %}">
+                    {{ cat.name }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

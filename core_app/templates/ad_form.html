@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}{% if form.instance.pk %}Редактировать{% else %}Подать объявление{% endif %}{% endblock %}
+{% block content %}
+<style>
+    form input,form select,form textarea{width:100%;padding:12px;border:1px solid #dee2e6;border-radius:10px;margin-bottom:20px;background:#f8f9fa;transition:border-color .2s,background .2s;}
+    form input:focus,form select:focus,form textarea:focus{border-color:#dc3545;outline:none;background:#fff;box-shadow:0 0 0 3px rgba(220,53,69,.1);}
+    label{font-weight:600;margin-bottom:8px;display:block;color:#495057;}
+    .helptext{font-size:13px;color:#6c757d;margin-top:-15px;margin-bottom:20px;display:block;}
+</style>
+<div class="row justify-content-center mt-4 mb-5">
+    <div class="col-12 col-md-8 col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 fade-in-up">
+            <div class="card-body p-4 p-md-5">
+                <h2 class="fw-bold mb-4">
+                    <i class="bi bi-{% if form.instance.pk %}pencil-square{% else %}plus-circle{% endif %} me-2 text-danger"></i>
+                    {% if form.instance.pk %}Редактировать объявление{% else %}Подать объявление{% endif %}
+                </h2>
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <div class="d-flex flex-column flex-sm-row justify-content-end gap-3 mt-4">
+                        <a href="{% url 'profile' %}" class="btn btn-light btn-lg px-4 rounded-pill">Отмена</a>
+                        <button type="submit" class="btn btn-danger btn-lg px-5 rounded-pill">
+                            <i class="bi bi-check2 me-1"></i>Сохранить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
